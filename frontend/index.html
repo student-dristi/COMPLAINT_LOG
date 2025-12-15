@@ -132,6 +132,15 @@
             background-color: #374151;
         }
 
+        /* Specific style for Export Button */
+        .export-btn {
+            background-color: #059669; /* Green color */
+            margin-top: 10px;
+        }
+        .export-btn:hover {
+            background-color: #047857;
+        }
+
         .status-message {
             margin-top: 15px;
             text-align: center;
@@ -142,12 +151,11 @@
         .success { background-color: #d1fae5; color: #065f46; }
         .error { background-color: #fee2e2; color: #991b1b; }
 
-        /* Log Item Styles */
         .logs-container {
             margin-top: 20px;
             overflow-y: auto;
             flex-grow: 1;
-            padding-right: 5px; /* Space for scrollbar */
+            padding-right: 5px;
         }
 
         .log-card {
@@ -164,10 +172,9 @@
             font-size: 16px;
             display: flex;
             justify-content: space-between;
-            align-items: center; /* Ensure alignment */
+            align-items: center;
         }
 
-        /* Container for badges to keep them together on the left */
         .badge-group {
             display: flex;
             gap: 5px;
@@ -177,7 +184,7 @@
             font-size: 12px;
             color: #6b7280;
             font-weight: normal;
-            white-space: nowrap; /* Prevent date wrapping */
+            white-space: nowrap;
             margin-left: 10px;
         }
 
@@ -196,29 +203,12 @@
             text-transform: uppercase;
         }
 
-        /* Category Badge (Blue) */
-        .badge.category {
-            background-color: #e0f2fe;
-            color: #0369a1;
-        }
+        .badge.category { background-color: #e0f2fe; color: #0369a1; }
+        .badge.pending { background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
 
-        /* Pending Status Badge (Amber/Orange) */
-        .badge.pending {
-            background-color: #fff7ed;
-            color: #c2410c;
-            border: 1px solid #fed7aa;
-        }
-
-        /* Responsive Design */
         @media (max-width: 800px) {
-            .app-wrapper {
-                flex-direction: column;
-                align-items: center;
-            }
-            .side-panel {
-                width: 100%;
-                max-width: 500px; /* Match form width */
-            }
+            .app-wrapper { flex-direction: column; align-items: center; }
+            .side-panel { width: 100%; max-width: 500px; }
         }
     </style>
 </head>
@@ -265,7 +255,6 @@
             </div>
 
             <button type="submit" id="submitBtn">Raise Ticket</button>
-            
             <div id="statusMessage" class="status-message"></div>
         </form>
     </div>
@@ -277,6 +266,8 @@
             <input type="tel" id="searchPhone" placeholder="Enter phone to view history">
         </div>
         <button class="secondary-btn" onclick="fetchLogs()">Find Tickets</button>
+        
+        <button class="secondary-btn export-btn" onclick="exportCsv()">Download All Tickets</button>
         
         <div id="logsContainer" class="logs-container">
             <p style="text-align: center; color: #9ca3af; margin-top: 20px;">
@@ -323,7 +314,6 @@
                 statusDiv.style.display = 'block';
                 document.getElementById('complaintForm').reset();
                 
-                // Auto-refresh logs if the user had that phone number entered in the search box
                 document.getElementById('searchPhone').value = phoneInput;
                 fetchLogs();
             } else {
@@ -335,7 +325,7 @@
             statusDiv.style.display = 'block';
         } finally {
             submitBtn.disabled = false;
-            submitBtn.innerText = "Submit Complaint";
+            submitBtn.innerText = "Raise Ticket";
         }
     });
 
@@ -352,23 +342,19 @@
         container.innerHTML = '<p style="text-align:center;">Loading...</p>';
 
         try {
-            // Fetch from the backend user_logs endpoint
             const response = await fetch(`http://localhost:8000/api/user_logs?phone=${encodeURIComponent(phone)}`);
             const logs = await response.json();
 
-            container.innerHTML = ''; // Clear loading state
+            container.innerHTML = ''; 
 
             if (logs.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: #6b7280;">No pending tickets found for this number.</p>';
                 return;
             }
 
-            // Render each log entry
             logs.forEach(log => {
                 const dateObj = new Date(log.date);
                 const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                // Ensure status exists, default to pending if missing 
                 const statusText = log.status ? log.status.toUpperCase() : "PENDING";
 
                 const card = document.createElement('div');
@@ -391,6 +377,23 @@
             console.error(error);
             container.innerHTML = '<p style="text-align: center; color: #991b1b;">Failed to load history.</p>';
         }
+    }
+
+    
+    // --- NEW: CSV EXPORT FUNCTION (Updated) ---
+    function exportCsv() {
+        // We add ?t=timestamp to force the browser to fetch a fresh file
+        const timestamp = new Date().getTime(); 
+        const exportUrl = `http://localhost:8000/api/export_csv?t=${timestamp}`;
+
+        const link = document.createElement('a');
+        link.href = exportUrl;
+        
+        link.setAttribute('download', 'it_support_tickets.csv'); 
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 
