@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse  # Imported FileResponse for downloads
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
@@ -6,6 +7,8 @@ import csv
 import os
 
 app = FastAPI()
+
+# Allow frontend to communicate with backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,7 +23,7 @@ CSV_FILE = "complaints.csv"
 if not os.path.exists(CSV_FILE) or os.path.getsize(CSV_FILE) == 0:
     with open(CSV_FILE, mode='w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["username", "phone", "plant", "category", "complaint", "date", "status"])  # status added
+        writer.writerow(["username", "phone", "plant", "category", "complaint", "date", "status"])
 
 
 class ComplaintRequest(BaseModel):
@@ -79,3 +82,25 @@ async def get_user_logs(phone: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading complaints: {e}")
+
+
+
+# --- NEW ENDPOINT FOR CSV EXPORT ---
+@app.get("/api/export_csv")
+async def export_csv():
+    if not os.path.exists(CSV_FILE):
+        raise HTTPException(status_code=404, detail="No complaints file found.")
+    
+    # We add headers to tell the browser NOT to cache this file
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    }
+
+    return FileResponse(
+        path=CSV_FILE, 
+        filename="complaints_export.csv", 
+        media_type='text/xlx',
+        headers=headers
+    )
