@@ -329,7 +329,9 @@
         }
     });
 
-    // --- FETCH LOGS FUNCTION ---
+    
+
+    // --- FETCH LOGS FUNCTION (Updated with Resolve Button) ---
     async function fetchLogs() {
         const phone = document.getElementById('searchPhone').value;
         const container = document.getElementById('logsContainer');
@@ -348,7 +350,7 @@
             container.innerHTML = ''; 
 
             if (logs.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #6b7280;">No pending tickets found for this number.</p>';
+                container.innerHTML = '<p style="text-align: center; color: #6b7280;">No pending tickets found.</p>';
                 return;
             }
 
@@ -359,6 +361,8 @@
 
                 const card = document.createElement('div');
                 card.className = 'log-card';
+                
+                // We add a specific ID to the button using the database ID (log.id)
                 card.innerHTML = `
                     <h4>
                         <div class="badge-group">
@@ -369,6 +373,13 @@
                     </h4>
                     <div class="detail"><strong>Plant:</strong> ${log.plant}</div>
                     <div class="detail" style="margin-top: 8px;">"${log.complaint}"</div>
+                    
+                    <button 
+                        class="secondary-btn" 
+                        style="background-color: #fff; color: #059669; border: 1px solid #059669; margin-top: 10px; font-size: 14px; padding: 8px;"
+                        onclick="markResolved(${log.id})">
+                        ✓ Mark as Resolved
+                    </button>
                 `;
                 container.appendChild(card);
             });
@@ -379,7 +390,30 @@
         }
     }
 
-    
+    // --- NEW: MARK RESOLVED FUNCTION ---
+    async function markResolved(ticketId) {
+        if(!confirm("Are you sure this issue is fixed? It will be removed from the pending list.")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8000/api/complaint/${ticketId}/resolve`, {
+                method: 'PUT'
+            });
+
+            if (response.ok) {
+                // Refresh the list to remove the resolved item
+                fetchLogs(); 
+            } else {
+                alert("Failed to update ticket status.");
+            }
+        } catch (error) {
+            console.error("Error resolving ticket:", error);
+            alert("Error connecting to server.");
+        }
+    }
+
+   
     // --- NEW: CSV EXPORT FUNCTION (Updated) ---
     function exportCsv() {
         // We add ?t=timestamp to force the browser to fetch a fresh file
