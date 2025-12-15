@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Support First Choice</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Wrapper for the split layout */
+        .app-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            align-items: flex-start;
+        }
+
+        /* Main Form Container */
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            flex: 1; /* Takes available space */
+        }
+
+        /* Side Panel Container */
+        .side-panel {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 350px; /* Fixed width for side panel */
+            display: flex;
+            flex-direction: column;
+            max-height: 800px; /* Limit height if logs get long */
+        }
+
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #1f2937;
+            margin-top: 0;
+            font-size: 22px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box; 
+            color: #4b5563;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            background-color: #1d4ed8; 
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #1e40af;
+        }
+
+        button.secondary-btn {
+            background-color: #4b5563;
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        
+        button.secondary-btn:hover {
+            background-color: #374151;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+        .success { background-color: #d1fae5; color: #065f46; }
+        .error { background-color: #fee2e2; color: #991b1b; }
+
+        /* Log Item Styles */
+        .logs-container {
+            margin-top: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px; /* Space for scrollbar */
+        }
+
+        .log-card {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .log-card h4 {
+            margin: 0 0 5px 0;
+            color: #111827;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Ensure alignment */
+        }
+
+        /* Container for badges to keep them together on the left */
+        .badge-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .log-card .date {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: normal;
+            white-space: nowrap; /* Prevent date wrapping */
+            margin-left: 10px;
+        }
+
+        .log-card .detail {
+            font-size: 14px;
+            color: #4b5563;
+            margin: 5px 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Category Badge (Blue) */
+        .badge.category {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        /* Pending Status Badge (Amber/Orange) */
+        .badge.pending {
+            background-color: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 800px) {
+            .app-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+            .side-panel {
+                width: 100%;
+                max-width: 500px; /* Match form width */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    
+    <div class="container">
+        <h1>IT Support First Choice</h1>
+        <p class="subtitle">Log your equipment issue for prompt assistance.</p>
+
+        <form id="complaintForm">
+            <div class="form-group">
+                <label for="username">Your Name</label>
+                <input type="text" id="username" name="username" placeholder="e.g., Jane Doe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Contact Phone</label>
+                <input type="tel" id="phone" name="phone" placeholder="e.g., 555-123-4567" required>
+            </div>
+
+            <div class="form-group">
+                <label for="plant">Plant/Location</label>
+                <input type="text" id="plant" name="plant" placeholder="e.g., KOLKATA" required>
+            </div>
+
+            <div class="form-group">
+                <label for="category">Category of Equipment</label>
+                <select id="category" name="category" required>
+                    <option value="" disabled selected>Select a Category</option>
+                    <option value="laptop">Laptop</option>
+                    <option value="desktop">Desktop</option>
+                    <option value="printer">Printer</option>
+                    <option value="network">Network</option>
+                    <option value="software">Software</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="complaint">Detailed Complaint</label>
+                <textarea id="complaint" name="complaint" 
+                    placeholder="Please describe the issue in detail..." required></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn">Raise Ticket</button>
+            
+            <div id="statusMessage" class="status-message"></div>
+        </form>
+    </div>
+
+    <div class="side-panel">
+        <h2>Ticket History</h2>
+        <div class="form-group">
+            <label for="searchPhone">Enter Phone Number</label>
+            <input type="tel" id="searchPhone" placeholder="Enter phone to view history">
+        </div>
+        <button class="secondary-btn" onclick="fetchLogs()">Find Tickets</button>
+        
+        <div id="logsContainer" class="logs-container">
+            <p style="text-align: center; color: #9ca3af; margin-top: 20px;">
+                Enter your phone number above to see previous complaints.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- COMPLAINT SUBMISSION ---
+    document.getElementById('complaintForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('statusMessage');
+        const phoneInput = document.getElementById('phone').value;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Submitting...";
+        statusDiv.style.display = 'none';
+
+        const formData = {
+            username: document.getElementById('username').value,
+            phone: phoneInput,
+            plant: document.getElementById('plant').value,
+            category: document.getElementById('category').value,
+            complaint: document.getElementById('complaint').value
+        };
+
+        try {
+            const response = await fetch('http://localhost:8000/api/complaint', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                statusDiv.className = 'status-message success';
+                statusDiv.innerText = result.message || "Complaint submitted successfully!";
+                statusDiv.style.display = 'block';
+                document.getElementById('complaintForm').reset();
+                
+                // Auto-refresh logs if the user had that phone number entered in the search box
+                document.getElementById('searchPhone').value = phoneInput;
+                fetchLogs();
+            } else {
+                throw new Error(result.detail || 'Submission failed');
+            }
+        } catch (error) {
+            statusDiv.className = 'status-message error';
+            statusDiv.innerText = "Error: " + error.message;
+            statusDiv.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit Complaint";
+        }
+    });
+
+    // --- FETCH LOGS FUNCTION ---
+    async function fetchLogs() {
+        const phone = document.getElementById('searchPhone').value;
+        const container = document.getElementById('logsContainer');
+
+        if (!phone) {
+            alert("Please enter a phone number to search.");
+            return;
+        }
+
+        container.innerHTML = '<p style="text-align:center;">Loading...</p>';
+
+        try {
+            // Fetch from the backend user_logs endpoint
+            const response = await fetch(`http://localhost:8000/api/user_logs?phone=${encodeURIComponent(phone)}`);
+            const logs = await response.json();
+
+            container.innerHTML = ''; // Clear loading state
+
+            if (logs.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #6b7280;">No pending tickets found for this number.</p>';
+                return;
+            }
+
+            // Render each log entry
+            logs.forEach(log => {
+                const dateObj = new Date(log.date);
+                const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                // Ensure status exists, default to pending if missing 
+                const statusText = log.status ? log.status.toUpperCase() : "PENDING";
+
+                const card = document.createElement('div');
+                card.className = 'log-card';
+                card.innerHTML = `
+                    <h4>
+                        <div class="badge-group">
+                            <span class="badge category">${log.category}</span>
+                            <span class="badge pending">${statusText}</span>
+                        </div>
+                        <span class="date">${dateStr}</span>
+                    </h4>
+                    <div class="detail"><strong>Plant:</strong> ${log.plant}</div>
+                    <div class="detail" style="margin-top: 8px;">"${log.complaint}"</div>
+                `;
+                container.appendChild(card);
+            });
+
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = '<p style="text-align: center; color: #991b1b;">Failed to load history.</p>';
+        }
+    }
+</script>
+
+</body>
+</html>
